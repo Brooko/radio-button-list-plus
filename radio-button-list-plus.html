@@ -1,0 +1,129 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../option-button-plus/option-button-plus.html">
+
+<!--
+`radio-button-list-plus`
+A simple list of radio-button-plus elements
+
+@demo demo/index.html 
+-->
+
+<dom-module id="radio-button-list-plus">
+  <template>
+    <template id="list" is="dom-repeat" items="{{items}}">
+      <option-button-plus
+       button-type="radio-button"
+       on-change="_itemsChanged"
+       label="[[getLabel(item)]]"
+       selected="[[getSelect(item)]]"
+       disabled="[[getRule(rules,item,index,'disabled')]]">
+      </option-button-plus>
+    </template>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'radio-button-list-plus',
+
+      ready:function(){
+        var firstIndex;
+        // Set attrForMark and first index selected
+        this.items=this.items.map(function(item,index) {
+            //IF attrForMark not defined or item disabled
+          if(item[this.attrForMark]==undefined||this.getRule(this.rules,item,index,'disabled')) {
+            item[this.attrForMark] = false;
+          }
+          // Set ONLY THE FIRST element preselected on true.
+          if(item[this.attrForMark]) {
+            item[this.attrForMark]=(firstIndex == undefined ? true : false);
+            firstIndex =(firstIndex == undefined ? index :firstIndex)
+          }
+          return item;
+        }.bind(this));
+        this._returnItemSelected(firstIndex);
+      },
+
+      _itemsChanged:function(e){
+          var buttons = this.querySelector("option-button-plus[selected]");
+          try{
+            buttons.selected=false;
+          }catch(e){}
+          this.set("items."+ this.indexSelected+"."+this.attrForMark,false);
+          //CHANGE indexSelected and set the new item
+          this._returnItemSelected(e.model.index);
+      },
+
+      _returnItemSelected:function(index){
+          this.indexSelected= index;
+          this.set("items."+ this.indexSelected+"."+this.attrForMark,true);
+          this.itemSelected = this.get('items.'+this.indexSelected);
+          this.isMarked=(this.itemSelected != undefined ? true : false)
+      },
+
+      getLabel:function(item){
+        return item[this.attrForLabel];
+      },
+
+      getSelect:function(item){
+          return item[this.attrForMark];
+      },
+
+     getRule:function(rules,item,index,ruleSelected){
+       var currentItemRule;
+       try {
+          currentItemRule = rules[item[this.attrForSelect]][ruleSelected];
+       } catch(e) {
+         // attForSelected NOT DEFINED OR RULE SET BY ID
+          currentItemRule = this.get('rules.'+index+'.'+ruleSelected);
+       }
+       if(ruleSelected=='disabled'&&this.disabled){
+          currentItemRule=true;
+       }
+       return (currentItemRule != undefined ?
+               currentItemRule : false);
+      },
+
+      properties: {
+        attrForSelect:{
+          type:String,
+          value:undefined
+        },
+        attrForMark:{
+          type:String,
+          value:"selected"
+        },
+        attrForLabel:{
+            type:String,
+            value:"label"
+        },
+        rules:{
+            type:Array,
+            value:null
+        },
+        items: {
+            type:Array,
+            value: null
+        },
+        itemSelected:{
+            type:Object,
+            value:null,
+            notify:true
+        },
+        indexSelected:{
+            type:Number,
+            value:0,
+            notify:true
+        },
+        disabled:{
+            type:Boolean,
+            value:false
+        },
+        isMarked:{
+            type:Boolean,
+            value:false,
+            notify:true
+        }
+      }
+    });
+  </script>
+</dom-module>
